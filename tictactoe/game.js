@@ -19,7 +19,6 @@ TicTacToe.prototype.newGame = function() {
 
 	$("#turnDisplay").text("X Turn");
 	this.context.clearRect(0, 0, this.width, this.height);
-	gamefield = [[0,0,0], [0,0,0], [0,0,0]];
 
 	for (var i = 0; i < 2; ++i){
 		this.context.moveTo(this.width / 3 * (1 + i), 0);
@@ -87,6 +86,10 @@ TicTacToe.prototype.drawO = function (x, y) {
 		2 * Math.PI
 	);
 	this.context.stroke();
+}
+
+TicTacToe.prototype.playerHasWon = function (player) {
+	return false;
 }
 
 TicTacToe.prototype.initializeClickEvents = function () {
