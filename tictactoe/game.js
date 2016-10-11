@@ -16,6 +16,7 @@ var TicTacToe = function (canvas) {
 
 TicTacToe.prototype.newGame = function() {
 	this.gamefield = [[0,0,0], [0,0,0], [0,0,0]];
+	this.currentPlayer = 1;
 
 	$("#turnDisplay").text("X Turn");
 	this.context.clearRect(0, 0, this.width, this.height);
@@ -33,13 +34,19 @@ TicTacToe.prototype.newGame = function() {
 	}
 }
 
+TicTacToe.prototype.nextPlayer = function () {
+	this.currentPlayer = this.currentPlayer == 1 ? 2 : 1;
+	var currentPlayerSymbol = this.currentPlayer == 1 ? "X" : "O";
+	$("#turnDisplay").text(currentPlayerSymbol + " Turn");
+}
+
 TicTacToe.prototype.areXAndYInField = function (x, y) {
 	return (x >= 0 && x <= 2 && y >= 0 && y <= 2)
 }
 
-TicTacToe.prototype.makeMark = function (x, y, player) {
-	// x and y should be in the interval [0, 2] and player should be 1 or 2
-	if (!this.areXAndYInField(x, y) || player < 1 || player > 2) {
+TicTacToe.prototype.makeMark = function (x, y) {
+	// x and y should be in the interval [0, 2]
+	if (!this.areXAndYInField(x, y)) {
 		return;
 	}
 
@@ -47,13 +54,15 @@ TicTacToe.prototype.makeMark = function (x, y, player) {
 		return;
 	}
 
-	this.gamefield[x][y] = player;
-	if (player == 1) {
+	this.gamefield[x][y] = this.currentPlayer;
+	if (this.currentPlayer == 1) {
 		this.drawX(x, y);
 	}
-	else if (player == 2) {
+	else if (this.currentPlayer == 2) {
 		this.drawO(x, y);
 	}
+
+	this.nextPlayer();
 }
 
 TicTacToe.prototype.drawX = function (x, y) {
@@ -93,14 +102,19 @@ TicTacToe.prototype.playerHasWon = function (player) {
 }
 
 TicTacToe.prototype.initializeClickEvents = function () {
-	// canvasLeft = canvas.offsetLeft;
-	// canvasTop = canvas.offsetTop;
-	// canvas.addEventListener('click', function(event) {
-	// 	var x = event.pageX - canvasLeft,
-	// 		y = event.pageY - canvasTop;
-
-
-	// })
+	canvasLeft = this.canvas.offsetLeft;
+	canvasTop = this.canvas.offsetTop;
+	var self = this;
+	canvas.addEventListener('click', function(event) {
+		var rect = self.canvas.getBoundingClientRect();
+		var x = event.clientX - rect.left;
+		var y = event.clientY - rect.top;
+		// console.log(x,y);
+		x = Math.floor(x / (rect.width / 3));
+		y = Math.floor(y / (rect.height / 3));
+		// console.log(x,y);
+		self.makeMark(x, y);
+	})
 }
 
 var canvas = document.getElementById('myCanvas');
