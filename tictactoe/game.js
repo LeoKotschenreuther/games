@@ -17,27 +17,28 @@ var TicTacToe = function (canvas) {
 TicTacToe.prototype.newGame = function() {
 	this.gamefield = [[0,0,0], [0,0,0], [0,0,0]];
 	this.currentPlayer = 1;
+	this.isGameRunning = true;
 
 	$("#turnDisplay").text("X Turn");
 	this.context.clearRect(0, 0, this.width, this.height);
 
 	for (var i = 0; i < 2; ++i){
+		this.context.beginPath()
 		this.context.moveTo(this.width / 3 * (1 + i), 0);
 		this.context.lineTo(this.width / 3 * (1 + i) , this.height);
-		this.context.stroke();
-	}
-
-	for (var i = 0; i < 2; ++i){
 		this.context.moveTo(0, this.height / 3 * (1 + i));
 		this.context.lineTo(this.width, this.height / 3 * (1 + i));
 		this.context.stroke();
 	}
 }
 
+TicTacToe.prototype.currentPlayerSymbol = function () {
+	return this.currentPlayer == 1 ? "X" : "O";
+}
+
 TicTacToe.prototype.nextPlayer = function () {
 	this.currentPlayer = this.currentPlayer == 1 ? 2 : 1;
-	var currentPlayerSymbol = this.currentPlayer == 1 ? "X" : "O";
-	$("#turnDisplay").text(currentPlayerSymbol + " Turn");
+	$("#turnDisplay").text(this.currentPlayerSymbol() + " Turn");
 }
 
 TicTacToe.prototype.areXAndYInField = function (x, y) {
@@ -62,7 +63,18 @@ TicTacToe.prototype.makeMark = function (x, y) {
 		this.drawO(x, y);
 	}
 
-	this.nextPlayer();
+	isvictory = this.currentPlayerHasWon();
+	if (isvictory) {
+		this.isGameRunning = false;
+		$("#turnDisplay").text(this.currentPlayerSymbol() + " has won!");
+	}
+	else if (this.isDraw()) {
+		this.isGameRunning = false;
+		$("#turnDisplay").text("Draw");
+	}
+	else {
+		this.nextPlayer();
+	}
 }
 
 TicTacToe.prototype.drawX = function (x, y) {
@@ -71,12 +83,13 @@ TicTacToe.prototype.drawX = function (x, y) {
 		return;
 	}
 
+	this.context.beginPath()
 	this.context.moveTo(this.fieldWidth * (x + this.markMarginPercentage), this.fieldHeight * (y + this.markMarginPercentage));
 	this.context.lineTo(this.fieldWidth * (x + 1 - this.markMarginPercentage), this.fieldHeight * (y + 1 - this.markMarginPercentage));
-	this.context.stroke();
 
 	this.context.moveTo(this.fieldWidth * (x + 1 - this.markMarginPercentage), this.fieldHeight * (y + this.markMarginPercentage));
 	this.context.lineTo(this.fieldWidth * (x + this.markMarginPercentage), this.fieldHeight * (y + 1 - this.markMarginPercentage));
+
 	this.context.stroke();
 }
 
@@ -97,7 +110,42 @@ TicTacToe.prototype.drawO = function (x, y) {
 	this.context.stroke();
 }
 
-TicTacToe.prototype.playerHasWon = function (player) {
+TicTacToe.prototype.isDraw = function () {
+	for (var x = 0; x < 3; ++x) {
+		for (var y = 0; y < 3; ++y) {
+			if (this.gamefield[x][y] == 0) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+TicTacToe.prototype.currentPlayerHasWon = function () {
+	// horizontal
+	for (var i = 0; i < 3; ++i) {
+		if (this.currentPlayer == this.gamefield[i][0] &&
+			this.gamefield[i][0] == this.gamefield[i][1] &&
+			this.gamefield[i][1] == this.gamefield[i][2]) {
+			return true;
+		}
+	}
+	// vertical
+	for (var i = 0; i < 3; ++i) {
+		if (this.currentPlayer == this.gamefield[0][i] &&
+			this.gamefield[0][i] == this.gamefield[1][i] &&
+			this.gamefield[1][i] == this.gamefield[2][i]) {
+			return true;
+		}
+	}
+	// and diagonal
+	for (var i = 0; i < 2; ++i) {
+		if (this.currentPlayer == this.gamefield[0 + 2 * i][0] &&
+			this.gamefield[0 + 2 * i][0] == this.gamefield[1][1] &&
+			this.gamefield[1][1] == this.gamefield[2 - 2 * i][2]) {
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -105,16 +153,21 @@ TicTacToe.prototype.initializeClickEvents = function () {
 	canvasLeft = this.canvas.offsetLeft;
 	canvasTop = this.canvas.offsetTop;
 	var self = this;
-	canvas.addEventListener('click', function(event) {
+	canvas.addEventListener('click', function (event) {
+		if (!self.isGameRunning) {
+			return;
+		}
 		var rect = self.canvas.getBoundingClientRect();
 		var x = event.clientX - rect.left;
 		var y = event.clientY - rect.top;
-		// console.log(x,y);
 		x = Math.floor(x / (rect.width / 3));
 		y = Math.floor(y / (rect.height / 3));
-		// console.log(x,y);
 		self.makeMark(x, y);
 	})
+
+	$("#newGameButton").click(function () {
+		self.newGame();
+	});
 }
 
 var canvas = document.getElementById('myCanvas');
